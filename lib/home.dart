@@ -35,11 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<Widget> _screens = [
-    const HomeContent(),
-    const Calculadora(),
-    const Formulario(),
-  ];
+  late final List<Widget> _screens;
 
   final List<String> _screenTitles = [
     'Inicio',
@@ -48,12 +44,34 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const HomeContent(),
+      Calculadora(
+        onReturnToHome: () {
+          setState(() {
+            _currentIndex = 0;
+          });
+        },
+      ),
+      Formulario(  // Cambiado de const a normal para pasar el parámetro
+        onReturnToHome: () {
+          setState(() {
+            _currentIndex = 0;
+          });
+        },
+      ),
+    ];
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: const Text('Navegación entre pantallas'),
-        backgroundColor: Colors.lightBlue, // Azul claro
+        title: Text(_screenTitles[_currentIndex]),
+        backgroundColor: Colors.lightBlue,
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
@@ -187,7 +205,6 @@ class HomeContent extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20),
-
               ],
             ),
           ),

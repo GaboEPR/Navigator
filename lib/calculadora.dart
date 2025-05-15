@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class Calculadora extends StatefulWidget {
-  const Calculadora({super.key});
+  final Function() onReturnToHome;
+  
+  const Calculadora({super.key, required this.onReturnToHome});
 
   @override
   State<Calculadora> createState() => _CalculadoraState();
@@ -10,6 +12,31 @@ class Calculadora extends StatefulWidget {
 class _CalculadoraState extends State<Calculadora> {
   String _resultado = '0';
   String _expresion = '0';
+
+  void _mostrarConfirmacion(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmación'),
+          content: const Text('¿Deseas volver al inicio?'),
+          actions: [
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Aceptar'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Cierra el diálogo
+                widget.onReturnToHome(); // Llama a la función para regresar al home
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _presionar(String valor) {
     setState(() {
@@ -26,7 +53,7 @@ class _CalculadoraState extends State<Calculadora> {
         if (_expresion == '0') {
           _expresion = valor;
         } else {
-          _expresion += valor; 
+          _expresion += valor;
         }
       }
     });
@@ -52,18 +79,9 @@ class _CalculadoraState extends State<Calculadora> {
     return resultado.toString();
   }
 
-  Widget _boton(String texto) {
-    Color fondo = Colors.blueGrey;
-    Color textoColor = Colors.white;
-
-    // Cambiar estilo según el tipo de botón
-    if (texto == 'c') {
-      fondo = Colors.red;
-    } else if (texto == '=') {
-      fondo = Colors.green;
-    } else if ('/*-+'.contains(texto)) {
-      fondo = Colors.orange;
-    }
+  Widget _boton(String texto, {Color? fondo, Color? textoColor}) {
+    fondo = fondo ?? Colors.blueGrey;
+    textoColor = textoColor ?? Colors.white;
 
     return ElevatedButton(
       onPressed: () => _presionar(texto),
@@ -83,63 +101,92 @@ class _CalculadoraState extends State<Calculadora> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Fondo de imagen (comentado hasta que agregues el asset)
-          // Positioned.fill(
-          //   child: Image.asset(
-          //     'assets/fondo.jpg',
-          //     fit: BoxFit.cover,
-          //   ),
-          // ),
-          Column(
-            children: [
-              Expanded(
-                child: Container(
-                  alignment: Alignment.bottomRight,
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        _expresion,
-                        style: const TextStyle(fontSize: 32, color: Colors.black),
+    return WillPopScope(
+      onWillPop: () async {
+        _mostrarConfirmacion(context);
+        return false; // Evita que el botón físico de back cierre directamente
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Calculadora'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => _mostrarConfirmacion(context),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.home),
+              onPressed: () => _mostrarConfirmacion(context),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: Container(
+                alignment: Alignment.bottomRight,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      _expresion,
+                      style: const TextStyle(fontSize: 32, color: Colors.black),
+                    ),
+                    Text(
+                      _resultado,
+                      style: const TextStyle(
+                        fontSize: 48,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Text(
-                        _resultado,
-                        style: const TextStyle(
-                            fontSize: 48,
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [_boton('7'), _boton('8'), _boton('9'), _boton('/')],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [_boton('4'), _boton('5'), _boton('6'), _boton('*')],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [_boton('1'), _boton('2'), _boton('3'), _boton('-')],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [_boton('0'), _boton('c'), _boton('='), _boton('+')],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
+            ),
+            Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _boton('7'),
+                    _boton('8'),
+                    _boton('9'),
+                    _boton('/', fondo: Colors.orange),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _boton('4'),
+                    _boton('5'),
+                    _boton('6'),
+                    _boton('*', fondo: Colors.orange),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _boton('1'),
+                    _boton('2'),
+                    _boton('3'),
+                    _boton('-', fondo: Colors.orange),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _boton('0'),
+                    _boton('c', fondo: Colors.red),
+                    _boton('=', fondo: Colors.green),
+                    _boton('+', fondo: Colors.orange),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
